@@ -1,0 +1,9 @@
+#!/bin/bash
+
+read -p "Where on flip: " flipPath
+while true
+do
+  inotifywait -r -e modify ../
+  rsync -zrp $(pwd)/* wodrichw@access.engr.oregonstate.edu:~/$flipPath
+  echo sent to flip
+done

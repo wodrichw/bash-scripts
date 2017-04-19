@@ -1,0 +1,9 @@
+#!/bin/bash
+
+scripts="$(ls scripts)"
+
+PS3="Choose a program: "
+select script in $scripts
+do
+  ./scripts/$script
+done
