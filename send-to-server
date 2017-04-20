@@ -1,0 +1,60 @@
+#!/bin/bash
+
+#functions
+add-server(){
+  read -p "Enter path to host: " path
+  let "num = $(grep SERVER data/servers.txt | tail -1 | sed 's/ .*//g') + 1"
+  lastLine="$(cat data/servers.txt | tail -1)"
+  sed -i "s|$lastLine|&\n\n$num SERVER:$path|"  data/test.txt
+}
+
+add-path(){
+  num=$1
+  read -p "Enter path: " path
+  lastline="$(grep "$num PATH:" data/test.txt | tail -1)"
+  sed -i "s|$lastline|&\n$num PATH:$path|" data/test.txt
+}
+
+#Prompt server
+echo "#####################################################"
+while true
+do
+  servers="$(grep SERVER: data/test.txt | sed 's/[0-9] SERVER://')"
+  servers="$servers new"
+  PS3="Select Host: "
+  select server in $servers
+  do
+    if [ $server == "new" ]
+    then
+      add-server
+    fi
+    break
+  done
+  if [ $server != "new" ]
+  then
+    break
+  fi
+done
+
+#Prompt path
+echo "#####################################################"
+num=$(grep $server data/test.txt | sed 's| .*||')
+while true
+do
+  paths="$(grep "$num PATH" data/test.txt| sed "s|$num PATH:||")"
+  paths="$paths new"
+  PS3="Select Path: "
+  select path in $paths
+  do
+    if [ $path == "new" ]
+    then
+      add-path "$num"
+      path="new"
+    fi
+    break
+  done
+  if [ $path != "new" ]
+  then
+    break
+  fi
+done

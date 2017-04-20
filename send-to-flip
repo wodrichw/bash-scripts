@@ -10,7 +10,7 @@ then
       break
     done
     rsync -zrp $(pwd)/* $filepath~/$flipPath
-  elif [[ $2 == 'watch' ]];
+  elif [[ $2 == 'watch' ]]
     files=$(cat /home/william/bin/data/ssh.txt)
   else
     flipPath=$1
