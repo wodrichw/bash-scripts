@@ -5,21 +5,46 @@ add-server(){
   read -p "Enter path to host: " path
   let "num = $(grep SERVER data/servers.txt | tail -1 | sed 's/ .*//g') + 1"
   lastLine="$(cat data/servers.txt | tail -1)"
-  sed -i "s|$lastLine|&\n\n$num SERVER:$path|"  data/test.txt
+  sed -i "s|$lastLine|&\n\n$num SERVER:$path|"  /home/william/bin/data/servers.txt
 }
 
 add-path(){
   num=$1
   read -p "Enter path: " path
-  lastline="$(grep "$num PATH:" data/test.txt | tail -1)"
-  sed -i "s|$lastline|&\n$num PATH:$path|" data/test.txt
+  lastline="$(grep "$num PATH:" /home/william/bin/data/servers.txt | tail -1)"
+  sed -i "s|$lastline|&\n$num PATH:$path|" /home/william/bin/data/servers.txt
 }
+
+watch-serve(){
+  server=$1
+  path=$2
+
+  while true
+  do
+    inotifywait -r -e modify ../
+    rsync -zrp $(pwd)/* $server:$path
+    echo sent to flip
+  done
+}
+
+select-serve(){
+  server=$1
+  path=$2
+
+  read -p "Enter files: " files
+  for file in $files
+  do
+    rsync -zrp $(pwd)/$file $server:$path
+  done
+}
+
+
 
 #Prompt server
 echo "#####################################################"
 while true
 do
-  servers="$(grep SERVER: data/test.txt | sed 's/[0-9] SERVER://')"
+  servers="$(grep SERVER: /home/william/bin/data/servers.txt | sed 's/[0-9] SERVER://')"
   servers="$servers new"
   PS3="Select Host: "
   select server in $servers
@@ -38,10 +63,10 @@ done
 
 #Prompt path
 echo "#####################################################"
-num=$(grep $server data/test.txt | sed 's| .*||')
+num=$(grep $server /home/william/bin/data/servers.txt | sed 's| .*||')
 while true
 do
-  paths="$(grep "$num PATH" data/test.txt| sed "s|$num PATH:||")"
+  paths="$(grep "$num PATH" /home/william/bin/data/servers.txt| sed "s|$num PATH:||")"
   paths="$paths new"
   PS3="Select Path: "
   select path in $paths
@@ -57,4 +82,28 @@ do
   then
     break
   fi
+done
+
+
+#Prompt file upload action
+actions="watch send-all select"
+
+select action in $actions
+do
+  case $action in
+    watch)
+      watch-serve "$server" "$path"
+      exit
+      ;;
+    send-all)
+      rsync -rp $(pwd)*  $server:$path
+      exit
+      ;;
+    select)
+      select-serve "$server" "$path"
+      exit
+      ;;
+    *)
+      echo "Enter Choice: "
+  esac
 done
