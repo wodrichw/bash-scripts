@@ -1,0 +1,112 @@
+#!/bin/bash
+
+ #functions
+ print-tasks(){
+    echo "******************************************"
+    cat -n /home/william/bin/data/todo.txt
+    echo "******************************************"
+    echo
+ }
+
+catagorize-date(){
+    echo "$(echo $1 | sed "s|/.*||") $(echo $1 | sed 's|[0-9]*/||' | sed 's|/[0-9]*||') $(echo $1 | sed 's|.*/||')"
+}
+
+later(){
+    if [ $3 -gt $6 ]
+    then
+        echo "true"
+    elif  [ $1 -gt $4 ] && [ $3 -eq $6 ]
+    then
+        echo "true"
+    elif [ $2 -gt $5 ] && [ $1 -eq $4 ] && [ $3 -eq $6 ]
+    then
+        echo "true"
+    else
+        echo "false"
+    fi
+}
+
+add-task(){
+    #find location of newDate
+    newDate=$(catagorize-date $1)
+    dates=( $(cat /home/william/bin/data/todo.txt | sed 's/ .*//') )
+    dLen=${#dates[@]}
+
+    newLine="$@"
+    if [ $dLen == 0 ]
+    then
+        echo $newLine >> /home/william/bin/data/todo.txt
+    else
+        for (( i=0; i<${dLen}; i++));
+        do 
+            datesSpace[$i]=$(catagorize-date ${dates[$i]})
+            if [ $(later $newDate ${datesSpace[$i]}) == "true" ]
+            then
+                break
+            fi
+        done
+        #insert newDate in txt file
+        lineAbove="${dates[$i]}"
+        print-tasks
+        lineAbove=$(grep "$lineAbove" /home/william/bin/data/todo.txt | tail -1)
+        if [ $i -lt $dLen ]
+        then
+            sed -i "s|$lineAbove|$newLine\n&|" /home/william/bin/data/todo.txt
+        else
+            sed -i "s|$lineAbove|&\n$newLine|" /home/william/bin/data/todo.txt
+        fi
+    fi
+}
+
+cmd-len(){
+    echo ${#@}
+}
+
+pop-number(){
+    shift
+    echo $@
+}
+
+remove-task(){
+    tasks=$(cat -n /home/william/bin/data/todo.txt)
+    for (( i=0; i<$(cmd-len $@); ));
+    do
+        task=$(echo "$tasks" | grep "$1.*[0-9]*/[0-9]*/[0-9]*")
+        task=$(pop-number $task)
+        sed -i "s|$task||" /home/william/bin/data/todo.txt
+        shift
+    done
+}
+
+send-command() {
+    if [ "$1" == "a" ]
+    then
+        shift
+        add-task $@
+    elif [ "$1" == "r" ]
+    then
+        shift
+        remove-task $@
+    elif [ "$1" == "q" ]
+    then
+        cd /home/william/bin/data/
+        rm -rf sed*
+        exit
+    else
+        echo "'a', 'r', or 'q'"
+    fi
+}
+
+
+#Menu
+while true
+do
+    dates=( $(cat -n /home/william/bin/data/todo.txt) )
+    
+    print-tasks
+    read -p "REMOVE OR ADD: " task
+    send-command $task
+    #remove empty lines
+    sed -i '/^\s*$/d' /home/william/bin/data/todo.txt
+done

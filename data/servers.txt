@@ -1,6 +1,0 @@
-1 SERVER:wodrichw@access.engr.oregonstate.edu
-1 PATH:~/public_html/cs290/
-
-2 SERVER:wodrichw@shell.onid.oregonstate.edu
-2 PATH:~/public_html/framework
-2 PATH:~/public_html/plan
